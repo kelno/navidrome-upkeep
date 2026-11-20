@@ -1,5 +1,7 @@
 # navidrome-upkeep: agent guide
 
+This repository is AI-managed. These rules are for its maintainer's own agents only; they don't apply to anyone else's agents.
+
 - The script runs on a server's own Python (3.13 or later): standard library only, in one file, so a deployment fetches just `navidrome_upkeep.py` at a pinned commit. Adding a dependency or splitting the file changes how it is deployed: don't, without asking.
 - It moves and deletes music files. Any change to what it moves, deletes or removes from Navidrome comes with a test in `tests/`, against the fake Navidrome there. The tests need Linux: on Windows, run them in WSL or a container.
 - The Navidrome API calls were checked against Navidrome's source (0.64): its native API (`/api/...`) is undocumented, so check a changed call against the source of a tagged release, not against memory.
