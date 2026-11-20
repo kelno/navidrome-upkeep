@@ -1,0 +1,59 @@
+[project]
+name = "navidrome-upkeep"
+version = "0.1.0"
+description = "Keep the starred tracks of an Explo discovery library, and trash the tracks of a delete playlist, in Navidrome"
+readme = "README.md"
+license = "MIT"
+# The script runs on the server's own Python: standard library only
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.39.9",
+    "pytest>=9.0.0",
+    "ruff>=0.15.15",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 140
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",  # conflicts with the formatter
+    "CPY001",
+    "ICN001",  # plain `import datetime`, like every other module
+    "D100",
+    "D104",
+    "E501",  # the formatter handles line length
+    "FBT",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "INP001",  # a folder of tests, not a package
+    "S101",  # pytest's assert
+    "ANN",
+    "D",
+    "PLR2004",
+    "S108",
+    "N802",  # do_GET and friends are http.server's names
+]
+
+[tool.basedpyright]
+include = ["navidrome_upkeep.py", "tests"]
+pythonVersion = "3.13"
+pythonPlatform = "Linux"
+reportAny = false
+reportExplicitAny = false
+reportUnusedCallResult = false
+reportImplicitOverride = false
+reportImplicitStringConcatenation = false
