@@ -32,8 +32,6 @@ class FakeState:
     scans: list[list[str]] = dataclasses.field(default_factory=list)
     deleted_missing: list[str] = dataclasses.field(default_factory=list)
     unlisted: list[str] = dataclasses.field(default_factory=list)
-    unstarred: list[str] = dataclasses.field(default_factory=list)
-    unstar_fails: bool = False
     calls: int = 0
 
 
@@ -77,7 +75,7 @@ def make_handler(state: FakeState) -> type[http.server.BaseHTTPRequestHandler]:
             query = urllib.parse.parse_qs(url.query)
             answers: dict[str, object] = {
                 "/api/library": [{"id": 1, "path": MAIN_NAVIDROME_PATH}, {"id": 2, "path": state.discovery_path}],
-                "/api/song": [{"id": f"song:{path}", "libraryId": 2, "starred": True, "path": path} for path in state.starred],
+                "/api/song": [{"libraryId": 2, "starred": True, "path": path} for path in state.starred],
                 "/api/missing": state.missing,
                 "/api/playlist": [
                     {"id": "P0", "name": "delete", "ownerName": "someone else"},
@@ -89,13 +87,6 @@ def make_handler(state: FakeState) -> type[http.server.BaseHTTPRequestHandler]:
             }
             if url.path == "/rest/startScan":
                 state.scans.append(query.get("target", []))
-            if url.path == "/rest/unstar":
-                if state.unstar_fails:
-                    self.send({"subsonic-response": {"status": "failed", "error": {"code": 0, "message": "no"}}})
-                    return
-                state.unstarred += query.get("id", [])
-                self.send({"subsonic-response": {"status": "ok"}})
-                return
             if url.path not in answers:
                 self.send_response(404)
                 self.end_headers()
@@ -206,33 +197,6 @@ def test_frequent_keeps_a_starred_track(env: Env) -> None:
     assert not (env.root / "pending").exists()
 
 
-def test_a_kept_track_loses_its_star(env: Env) -> None:
-    env.state.starred = ["Weekly/a.flac"]
-    env.run(frequent=True)
-    assert (env.keep / "Weekly/a.flac").exists()
-    assert env.state.unstarred == ["song:Weekly/a.flac"]
-
-
-def test_a_failed_move_keeps_the_star(env: Env, monkeypatch: pytest.MonkeyPatch) -> None:
-    def fail(source: pathlib.Path, target: pathlib.Path) -> None:
-        raise OSError(source, target)
-
-    monkeypatch.setattr(navidrome_upkeep, "move_file", fail)
-    env.state.starred = ["Weekly/a.flac"]
-    with pytest.raises(OSError, match=r"a[.]flac"):
-        env.run(frequent=True)
-    assert (env.discovery / "Weekly/a.flac").exists()
-    assert not env.state.unstarred
-
-
-def test_a_failed_unstar_still_keeps_the_track(env: Env, caplog: pytest.LogCaptureFixture) -> None:
-    env.state.starred = ["Weekly/a.flac"]
-    env.state.unstar_fails = True
-    env.run(frequent=True)
-    assert (env.keep / "Weekly/a.flac").exists()
-    assert "couldn't remove its star" in caplog.text
-
-
 def test_frequent_with_nothing_to_do_does_not_scan(env: Env) -> None:
     env.run(frequent=True)
     assert not env.state.scans
@@ -257,7 +221,6 @@ def test_already_kept_tracks(env: Env, caplog: pytest.LogCaptureFixture) -> None
     assert (env.discovery / "Weekly/c.flac").exists()
     assert (env.keep / "Weekly/c.flac").read_bytes() == b"x" * 5
     assert "Another file is already at" in caplog.text
-    assert env.state.unstarred == ["song:Weekly/b.flac"]
 
 
 def test_a_path_leading_out_of_the_library_stops_before_deleting(env: Env) -> None:

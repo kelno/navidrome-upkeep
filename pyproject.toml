@@ -46,7 +46,6 @@ convention = "google"
     "PLR2004",
     "S108",
     "N802",  # do_GET and friends are http.server's names
-    "C901",  # the fake Navidrome answers many endpoints in one handler
 ]
 
 [tool.basedpyright]

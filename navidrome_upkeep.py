@@ -6,7 +6,7 @@ never deletes anything. This script, run with its TOML settings file as argument
 
 1. Log in to Navidrome as the user in the login file (Explo's own env file), whose stars and playlists count.
 2. Move every starred track of the discovery library to the keep folder, inside the main library, keeping its
-   subfolders, then remove its star: the star only marks a track to keep, it isn't a favourite.
+   subfolders.
 3. If a delete playlist is set: move every track of that playlist of the user, whatever its library, to today's trash
    folder, at its path on the server (`<trash>/2026-11-20/mnt/music/Artist/x.flac`), then take it out of the playlist.
 4. Weekly only: once every move worked, delete everything left in the discovery folder. Any failure stops the script
@@ -344,28 +344,8 @@ def move_file(source: pathlib.Path, target: pathlib.Path) -> None:
     source.unlink()
 
 
-def unstar(navidrome: Navidrome, song_id: str, kept: pathlib.Path) -> None:
-    """Remove the star of a kept track, logging a failure rather than raising: the track is kept either way.
-
-    Navidrome treats a track moved between libraries within one scan as the same track, so its star would otherwise
-    follow it into the main library, where it would read as a favourite.
-
-    Args:
-        navidrome: The logged-in API.
-        song_id: The track's id.
-        kept: Where the track was kept, for the log.
-    """
-    try:
-        navidrome.subsonic("unstar", query=[("id", song_id)])
-    except (OSError, RuntimeError):
-        logger.exception("Kept %s, but couldn't remove its star", kept)
-
-
 def keep_starred(navidrome: Navidrome, discovery_id: int, settings: Settings, scan_targets: list[str]) -> None:
-    """Move each starred track of the discovery library to the keep folder, keeping its subfolders, then unstar it.
-
-    The star is removed only once the file has moved: unstarred first, a track whose move then failed would be
-    deleted by the next weekly run.
+    """Move each starred track of the discovery library to the keep folder, keeping its subfolders.
 
     Args:
         navidrome: The logged-in API.
@@ -403,12 +383,10 @@ def keep_starred(navidrome: Navidrome, discovery_id: int, settings: Settings, sc
             add_pending_scans(settings.pending_scan_file, scan_targets)
             source.unlink()
             logger.info("Already kept, removed the discovery copy: %s", target)
-            unstar(navidrome, str(song["id"]), target)
             continue
         add_pending_scans(settings.pending_scan_file, scan_targets)
         move_file(source, target)
         logger.info("Kept %s", target)
-        unstar(navidrome, str(song["id"]), target)
 
 
 def trash_listed(

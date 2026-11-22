@@ -4,7 +4,7 @@
 
 A companion script for [Explo](https://github.com/LumePart/Explo) and [Navidrome](https://www.navidrome.org/). Explo downloads a weekly discovery playlist into a Navidrome library of its own and never deletes anything. This script:
 
-- **keeps what you star**: every few minutes, it moves the discovery tracks you starred to a folder of your main library (a "to sort" folder, say), then removes its star: the star only marks what to keep, it isn't a favourite;
+- **keeps what you star**: every few minutes, it moves the discovery tracks you starred to a folder of your main library (a "to sort" folder, say): the star is only the signal;
 - **empties the discovery library** before each weekly run, once the starred tracks are safe;
 - **deletes from any player** (optional): add a track to a playlist of yours, such as `delete`, and within minutes it moves to a dated trash folder outside your libraries, where it stays 30 days (or what you set) before it's deleted for good.
 
@@ -19,7 +19,7 @@ Run with its settings file as argument, in one of two modes:
 
 Navidrome only notices a moved file when it rescans. The script rescans only the folders it changed, never a whole library. A track moved between libraries within one scan stays the same track for Navidrome, with its play counts, playlist entries and star.
 
-**Keeping**: the track moves from `<discovery_path>/Weekly-Exploration/x.flac` to `<keep_path>/Weekly-Exploration/x.flac`, then loses its star. If removing the star fails, the track is kept all the same, still starred, and the log says so. A track starred by mistake moves all the same. Navidrome recognises a moved track by its tags: a kept track retagged before the rescan is seen as a new track, and the old one stays in Settings > Missing Files.
+**Keeping**: the track moves from `<discovery_path>/Weekly-Exploration/x.flac` to `<keep_path>/Weekly-Exploration/x.flac`. A track starred by mistake moves all the same. Navidrome recognises a moved track by its tags: a kept track retagged before the rescan is seen as a new track, and the old one stays in Settings > Missing Files.
 
 **Deleting**: the track moves to `<trash_path>/<date>/<its path on the server>`, for example `<trash_path>/2026-11-20/mnt/music/Artist/Album/x.flac`, and leaves the playlist. Navidrome then shows it as missing, keeping its stars and play counts. To bring it back, move it back to its old path: the next scan finds it with its history. After `trash_days`, the day's folder is deleted, and only then are its tracks removed from Navidrome's missing files. This needs Navidrome to keep missing files, which is its default (`Scanner.PurgeMissing = "never"`): with `always`, every scan would forget them at once. Album folders left empty stay where they are.
 
