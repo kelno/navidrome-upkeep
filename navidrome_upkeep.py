@@ -318,6 +318,8 @@ def move_file(source: pathlib.Path, target: pathlib.Path) -> None:
 
     Within one drive, a rename. Across drives, copy under a hidden name Navidrome skips, check the size, then rename:
     the keep folder and the trash may be on a remote drive, and an interrupted copy must not look like a finished one.
+    The copy is of the contents only: on a drive whose files all belong to another user, such as an rclone mount, setting
+    the mode or the times is refused (EPERM).
 
     Args:
         source: The file to move.
@@ -336,7 +338,7 @@ def move_file(source: pathlib.Path, target: pathlib.Path) -> None:
     else:
         return
     partial = target.with_name(f".{target.name}.part")
-    shutil.copy2(source, partial)
+    shutil.copyfile(source, partial)
     if partial.stat().st_size != source.stat().st_size:
         msg = f"Copy of {source} to {partial} is incomplete"
         raise RuntimeError(msg)

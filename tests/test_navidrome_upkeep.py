@@ -3,10 +3,12 @@
 import collections.abc
 import dataclasses
 import datetime
+import errno
 import fcntl
 import http.server
 import json
 import pathlib
+import shutil
 import threading
 import urllib.parse
 
@@ -195,6 +197,24 @@ def test_frequent_keeps_a_starred_track(env: Env) -> None:
     assert env.state.scans == [["2:", "1:_to-sort"]]
     assert not env.state.deleted_missing
     assert not (env.root / "pending").exists()
+
+
+def test_keeps_a_starred_track_across_drives_that_refuse_modes_and_times(env: Env, monkeypatch: pytest.MonkeyPatch) -> None:
+    def rename_across_drives(self: pathlib.Path, target: pathlib.Path) -> None:
+        raise OSError(errno.EXDEV, "Invalid cross-device link", str(self), str(target))
+
+    def refuse(*_args: object, **_kwargs: object) -> None:
+        raise PermissionError(errno.EPERM, "Operation not permitted")
+
+    # An rclone mount whose files belong to root: changing their mode or times is refused
+    monkeypatch.setattr(pathlib.Path, "rename", rename_across_drives)
+    monkeypatch.setattr(shutil, "copystat", refuse)
+    monkeypatch.setattr(shutil, "copymode", refuse)
+    env.state.starred = ["Weekly/a.flac"]
+    env.run(frequent=True)
+    assert (env.keep / "Weekly/a.flac").read_bytes() == b"a" * 100
+    assert not (env.keep / "Weekly/.a.flac.part").exists()
+    assert not (env.discovery / "Weekly/a.flac").exists()
 
 
 def test_frequent_with_nothing_to_do_does_not_scan(env: Env) -> None:
