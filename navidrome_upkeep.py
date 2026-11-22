@@ -11,8 +11,8 @@ never deletes anything. This script, run with its TOML settings file as argument
    folder, at its path on the server (`<trash>/2026-11-20/mnt/music/Artist/x.flac`), then take it out of the playlist.
 4. Weekly only: once every move worked, delete everything left in the discovery folder. Any failure stops the script
    before it deletes anything.
-5. Rescan only the folders that changed: stars, play counts and playlist entries follow a track moved between libraries
-   within one scan, and a large main library isn't walked.
+5. Rescan only the folders that changed, so a large main library isn't walked. A track moved between libraries within
+   one scan stays the same track for Navidrome.
 6. Weekly only: remove the deleted tracks from Navidrome's missing files.
 7. Delete the trash folders older than the trash delay, removing their tracks from Navidrome's missing files only then:
    until that point, a track moved back to its old path gets its stars and play counts back. This relies on Navidrome
